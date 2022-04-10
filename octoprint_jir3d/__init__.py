@@ -20,7 +20,7 @@ class Jir3dPlugin(
 
 ):
     def on_after_startup(self):
-        self._logger.info("Hello Worldddddddddd! (more: %s)" %
+        self._logger.info("Hello World! (more: %s)" %
                           self._settings.get(["url"]))
         from . import impresoras
         impresoras.principal(self._settings.get(

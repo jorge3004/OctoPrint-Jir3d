@@ -23,29 +23,21 @@ class DataJir3d():
         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'
     }
 
-    def updateStatus(self):
+    def updatePrinterData(self):
         return requests.request(
             "PUT",
             self.url+"impresoras.php" + "?nombre="+Impresora.nombre,
             headers=self.headers,
-            data=json.dumps({"status": Impresora().status()})
-        )
-
-    def updateUReporte(self):
-        return requests.request(
-            "PUT",
-            self.url+"impresoras.php" + "?nombre="+Impresora.nombre,
-            headers=self.headers,
-            data=json.dumps({"uReporte": int(round(time.time()))})
-            # datetime.now(pytz.timezone('Mexico/General'))
-
+            data=json.dumps({
+                "status": Impresora().status(),
+                "uReporte": int(round(time.time()))
+            })
         )
 
 
 def paralelo():
     while (True):
-        DataJir3d().updateStatus()
-        DataJir3d().updateUReporte()
+        DataJir3d().updatePrinterData()
         time.sleep(4)
 
 
