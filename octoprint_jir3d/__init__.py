@@ -25,6 +25,8 @@ class Jir3dPlugin(
         from . import impresoras
         impresoras.principal(self._settings.get(
             ["nombre"]), self._settings.get(["apikey"]))
+        # self._logger.info(self._settings.get(["nombre"]))
+        # self._logger.info(self._settings.get(["aoikey"]))
         # impresoras.principal(
         #     self._settings.get(["url"]), self._settings.get(
         #         ["nombre"]), self._settings.get(["apikey"])
@@ -34,11 +36,11 @@ class Jir3dPlugin(
 
     def get_settings_defaults(self):
         # return dict(url="https://en.wikipedia.org/wiki/Hello_world", nombre="Xalapsssa")
-        return dict(url="https://jir3d.com.mx/dashboard/impresoras", nombre="nombre_jir3d", apikey="jir3d_apikey")
+        return dict(url="http://octopi.local", nombre="nombre_jir3d", apikey="jir3d_apikey")
 
-        return {
-            # put your plugin's default settings here
-        }
+        # return {
+        #     # put your plugin's default settings here
+        # }
 
     def get_template_configs(self):
         return [
