@@ -36,7 +36,7 @@ class Jir3dPlugin(
 
     def get_settings_defaults(self):
         # return dict(url="https://en.wikipedia.org/wiki/Hello_world", nombre="Xalapsssa")
-        return dict(url="http://octopi.local", nombre="nombre_jir3d", apikey="jir3d_apikey")
+        return dict(url="https://jir3d.com.mx/dashboard/impresoras", nombre="nombre_jir3d", apikey="jir3d_apikey")
 
         # return {
         #     # put your plugin's default settings here

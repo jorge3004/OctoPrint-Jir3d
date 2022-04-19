@@ -13,6 +13,7 @@ class Impresora:
     urlConnection = "http://localhost:5000/api/connection"
     urlPSU = "http://localhost:5000/api/plugin/psucontrol"
     urlImprimir = "http://localhost:5000/api/files/local/nivelar.gcode"
+    urlJob = "http://localhost:5000/api/job"
     if (platform.system() == "Windows"):
         updatesDir = (os.getenv('APPDATA')+"/Octoprint/uploads")
     else:
@@ -62,6 +63,32 @@ class Impresora:
             data=json.dumps({"command": "select", "print": "true"})
         )
 
+    def jobPrinter(self, option):
+
+        if(option == "pause"):
+            data = {
+                "command": "pause",
+                "action": "pause"
+            }
+        elif(option == "resume"):
+            data = {
+                "command": "pause",
+                "action": "resume"
+            }
+        else:
+            data = {"command": option}
+
+        return requests.request(
+            "POST",
+            self.urlJob,
+            headers={
+                'Authorization': 'Bearer ' + self.apikey,
+                'Content-Type': 'application/json'
+            },
+
+            data=json.dumps(data)
+        )
+
 
 class DataJir3d():
     urlImpresoras = "https://api.jir3d.com.mx/impresoras.php?nombre="
@@ -85,11 +112,24 @@ def paralelo():
             "uReporte": int(round(time.time())),
         }
         comando = DataJir3d().updatePrinterData(
-            impresoraLocal.nombre, data).json()
+            impresoraLocal.nombre, data)
+        try:
+            comando = comando.json()
+        except:
+            comando = comando.text
+
         if(comando == "on"):
             impresoraLocal.turnPsuOn()
         elif(comando == "off"):
             impresoraLocal.turnPsuOff()
+        elif(comando == "pausar"):
+            impresoraLocal.jobPrinter("pause")
+        elif(comando == "parar"):
+            impresoraLocal.jobPrinter("cancel")
+        elif(comando == "reiniciar"):
+            impresoraLocal.jobPrinter("restart")
+        elif(comando == "continuar"):
+            impresoraLocal.jobPrinter("resume")
         elif(comando != ""):
             completeName = os.path.join(
                 Impresora().updatesDir, "nivelar.gcode")
@@ -98,9 +138,9 @@ def paralelo():
             file1.write(comando)
             file1.close()
             impresoraLocal.turnPsuOn()
+            time.sleep(4)
             impresoraLocal.nivelar()
-
-        time.sleep(3)
+        time.sleep(2)
 
 
 def principal(nombreImpresora, apikey):
@@ -114,13 +154,3 @@ def principal(nombreImpresora, apikey):
 
 # impresoraPuebla = Impresora("Puebla", "F59852448440447FB980DD796402BD21")
 # impresoraLocal = Impresora("Novara", "01997B15DB0B4839B2FDDE7727DD2E0F")
-# data = {
-#     "status": "sksk",
-#     "uReporte": "ksksksks",
-#     "comando": "sss"
-# }
-# print(DataJir3d().updatePrinterData(
-#     impresoraLocal.nombre, data).json())
-# impresoraPuebla.url = "http://octopi.local/api/"
-
-# print(int(round(time.time())))
