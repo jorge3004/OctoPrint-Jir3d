@@ -14,6 +14,8 @@ class Impresora:
     urlPSU = "http://localhost:5000/api/plugin/psucontrol"
     urlImprimir = "http://localhost:5000/api/files/local/nivelar.gcode"
     urlJob = "http://localhost:5000/api/job"
+    urlPrinter = "http://localhost:5000/api/printer"
+
     if (platform.system() == "Windows"):
         updatesDir = (os.getenv('APPDATA')+"/Octoprint/uploads")
     else:
@@ -29,6 +31,41 @@ class Impresora:
             self.urlConnection,
             headers={'Authorization': 'Bearer ' + self.apikey}
         ).json().get('current', {}).get('state', {})
+
+    def printerStatusFlags(self):
+        return requests.request(
+            "GET",
+            self.urlPrinter,
+            headers={'Authorization': 'Bearer ' + self.apikey}
+        ).json().get('state', {}).get('flags', {})
+
+    def printerStatus(self):
+        return requests.request(
+            "GET",
+            self.urlPrinter,
+            headers={'Authorization': 'Bearer ' + self.apikey}
+        ).json()
+
+    def printerStatusTemperatureBed(self):
+        return requests.request(
+            "GET",
+            self.urlPrinter,
+            headers={'Authorization': 'Bearer ' + self.apikey}
+        ).json().get('temperature', {}).get('bed', {}).get('actual', {})
+
+    def printerStatusTemperatures(self):
+        return requests.request(
+            "GET",
+            self.urlPrinter,
+            headers={'Authorization': 'Bearer ' + self.apikey}
+        ).json().get('temperature', {})
+
+    def printerStatusTemperatureNozzle(self):
+        return requests.request(
+            "GET",
+            self.urlPrinter,
+            headers={'Authorization': 'Bearer ' + self.apikey}
+        ).json().get('temperature', {}).get('tool0', {}).get('actual', {})
 
     def turnPsuOn(self):
         return requests.request(
@@ -111,6 +148,16 @@ def paralelo():
             "status": impresoraLocal.status(),
             "uReporte": int(round(time.time())),
         }
+        if(data["status"] != "Closed"):
+            state = impresoraLocal.printerStatus()
+            data['tempNozzle'] = state.get(
+                'temperature', {}).get(
+                'tool0', {}).get('actual', {})
+            data['tempBed'] = state.get(
+                'temperature', {}).get('bed', {}).get('actual', {})
+            data['printerStatus'] = state.get('state', {}).get(
+                'flags', {})
+
         comando = DataJir3d().updatePrinterData(
             impresoraLocal.nombre, data)
         try:
@@ -133,12 +180,11 @@ def paralelo():
         elif(comando != ""):
             completeName = os.path.join(
                 Impresora().updatesDir, "nivelar.gcode")
-            # comando = comando.replace('\n', '')
             file1 = open(completeName, "w")
             file1.write(comando)
             file1.close()
             impresoraLocal.turnPsuOn()
-            time.sleep(4)
+            time.sleep(8)
             impresoraLocal.nivelar()
         time.sleep(2)
 
@@ -153,4 +199,12 @@ def principal(nombreImpresora, apikey):
 
 
 # impresoraPuebla = Impresora("Puebla", "F59852448440447FB980DD796402BD21")
+# data = {
+#     "status": "sta",
+#     "uReporte": "ure",
+# }
 # impresoraLocal = Impresora("Novara", "01997B15DB0B4839B2FDDE7727DD2E0F")
+# print(impresoraLocal.printerStatusFlags())
+# # print(impresoraLocal.printerStatusTemperatureBed())
+# # print(impresoraLocal.printerStatusTemperatureNozzle())
+# print(data)
