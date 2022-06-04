@@ -13,6 +13,7 @@ class Impresora:
     urlConnection = "http://localhost:5000/api/connection"
     urlPSU = "http://localhost:5000/api/plugin/psucontrol"
     urlImprimir = "http://localhost:5000/api/files/local/nivelar.gcode"
+    urlImprimir2 = "http://localhost:5000/api/files/local/impresion.gcode"
     urlJob = "http://localhost:5000/api/job"
     urlPrinter = "http://localhost:5000/api/printer"
 
@@ -100,6 +101,17 @@ class Impresora:
             data=json.dumps({"command": "select", "print": "true"})
         )
 
+    def imprimir(self):
+        return requests.request(
+            "POST",
+            self.urlImprimir2,
+            headers={
+                'Authorization': 'Bearer ' + self.apikey,
+                'Content-Type': 'application/json'
+            },
+            data=json.dumps({"command": "select", "print": "true"})
+        )
+
     def jobPrinter(self, option):
 
         if(option == "pause"):
@@ -158,12 +170,9 @@ def paralelo():
             data['printerStatus'] = state.get('state', {}).get(
                 'flags', {})
 
-        comando = DataJir3d().updatePrinterData(
-            impresoraLocal.nombre, data)
-        try:
-            comando = comando.json()
-        except:
-            comando = comando.text
+        response = DataJir3d().updatePrinterData(impresoraLocal.nombre, data)
+        responseJson = json.loads(response.text.replace("\\r", ""))
+        comando = responseJson['comando']
 
         if(comando == "on"):
             impresoraLocal.turnPsuOn()
@@ -177,15 +186,25 @@ def paralelo():
             impresoraLocal.jobPrinter("restart")
         elif(comando == "continuar"):
             impresoraLocal.jobPrinter("resume")
-        elif(comando != ""):
-            completeName = os.path.join(
-                Impresora().updatesDir, "nivelar.gcode")
-            file1 = open(completeName, "w")
-            file1.write(comando)
-            file1.close()
-            impresoraLocal.turnPsuOn()
-            time.sleep(8)
-            impresoraLocal.nivelar()
+        elif(comando == "imprimir"):
+            if(responseJson['idImpresion'] == "nivelacion"):
+                completeName = os.path.join(
+                    Impresora().updatesDir, "nivelar.gcode")
+                file1 = open(completeName, "w")
+                file1.write(responseJson['gcodeFile'])
+                file1.close()
+                impresoraLocal.turnPsuOn()
+                time.sleep(8)
+                impresoraLocal.nivelar()
+            else:
+                completeName = os.path.join(
+                    Impresora().updatesDir, "impresion.gcode")
+                file1 = open(completeName, "w")
+                file1.write(responseJson['gcodeFile'])
+                file1.close()
+                impresoraLocal.turnPsuOn()
+                time.sleep(8)
+                impresoraLocal.imprimir()
         time.sleep(2)
 
 
@@ -198,13 +217,17 @@ def principal(nombreImpresora, apikey):
         hilo.start()
 
 
+# impresoraLocal = Impresora("Novara", "01997B15DB0B4839B2FDDE7727DD2E0F")
 # impresoraPuebla = Impresora("Puebla", "F59852448440447FB980DD796402BD21")
 # data = {
 #     "status": "sta",
 #     "uReporte": "ure",
 # }
-# impresoraLocal = Impresora("Novara", "01997B15DB0B4839B2FDDE7727DD2E0F")
-# print(impresoraLocal.printerStatusFlags())
-# # print(impresoraLocal.printerStatusTemperatureBed())
-# # print(impresoraLocal.printerStatusTemperatureNozzle())
-# print(data)
+# response = DataJir3d().updatePrinterData(impresoraLocal.nombre, data)
+# responseJson = json.loads(response.text.replace("\\r", ""))
+# print(responseJson['comando'])
+# completeName = os.path.join(
+#     Impresora().updatesDir, "nivelar.gcode")
+# file1 = open(completeName, "w")
+# file1.write(responseJson['gcodeFile'])
+# file1.close()
